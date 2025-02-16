@@ -1,9 +1,12 @@
 from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai.project import CrewBase, agent, crew, task, before_kickoff, after_kickoff
+#from crewai_tools import SerperDevTool
+
 
 # If you want to run a snippet of code before or after the crew starts, 
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+
 
 @CrewBase
 class DoubleClickCrew():
@@ -14,6 +17,16 @@ class DoubleClickCrew():
 	# Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
 	agents_config = 'config/agents.yaml'
 	tasks_config = 'config/tasks.yaml'
+
+	@before_kickoff
+	def before_kickoff_function(self, inputs):
+		print(f"Before kickoff function with inputs: {inputs}")
+		return inputs # You can return the inputs or modify them as needed
+
+	@after_kickoff
+	def after_kickoff_function(self, result):
+		print(f"After kickoff function with result: {result}")
+		return result # You can return the result or modify it as needed
 
 	# If you would like to add tools to your agents, you can learn more about it here:
 	# https://docs.crewai.com/concepts/agents#agent-tools
@@ -44,7 +57,7 @@ class DoubleClickCrew():
 	def reporting_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['reporting_task'],
-			output_file='report.md'
+			output_file='outputs/report.md'
 		)
 
 	@crew
@@ -59,4 +72,4 @@ class DoubleClickCrew():
 			process=Process.sequential,
 			verbose=True,
 			# process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
-		)
+		)	
