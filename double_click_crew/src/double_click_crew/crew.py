@@ -1,6 +1,8 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task, before_kickoff, after_kickoff
-#from crewai_tools import SerperDevTool
+from crewai_tools import CSVSearchTool
+from crewai.knowledge.source.excel_knowledge_source import ExcelKnowledgeSource
+import os
 
 
 # If you want to run a snippet of code before or after the crew starts, 
@@ -18,6 +20,19 @@ class DoubleClickCrew():
 	agents_config = 'config/agents.yaml'
 	tasks_config = 'config/tasks.yaml'
 
+	# Get the directory where crew.py is located
+	current_dir = os.path.dirname(__file__)
+
+	# Construct the path to marketing_campaign.xlsx in the parent directory
+	csv_path = os.path.abspath(os.path.join(current_dir, '../../../marketing_campaign.csv'))
+
+	# Initialize tools or sources
+	search_tool = CSVSearchTool(csv=csv_path)
+	excel_source = ExcelKnowledgeSource(
+    	file_paths=['marketing_campaign.xlsx']
+	)
+	
+	"""
 	@before_kickoff
 	def before_kickoff_function(self, inputs):
 		print(f"Before kickoff function with inputs: {inputs}")
@@ -25,22 +40,17 @@ class DoubleClickCrew():
 
 	@after_kickoff
 	def after_kickoff_function(self, result):
-		print(f"After kickoff function with result: {result}")
-		return result # You can return the result or modify it as needed
+		print(f"After `kickoff` function with result: {result}")
+		return result # You can return the result or modify it as needed"""
 
 	# If you would like to add tools to your agents, you can learn more about it here:
 	# https://docs.crewai.com/concepts/agents#agent-tools
 	@agent
-	def researcher(self) -> Agent:
+	def data_analyst(self) -> Agent:
 		return Agent(
-			config=self.agents_config['researcher'],
-			verbose=True
-		)
-
-	@agent
-	def reporting_analyst(self) -> Agent:
-		return Agent(
-			config=self.agents_config['reporting_analyst'],
+			config=self.agents_config['data_analyst'],
+			tools=[self.search_tool],
+			knowledge_sources=[self.excel_source],
 			verbose=True
 		)
 
@@ -48,16 +58,10 @@ class DoubleClickCrew():
 	# task dependencies, and task callbacks, check out the documentation:
 	# https://docs.crewai.com/concepts/tasks#overview-of-a-task
 	@task
-	def research_task(self) -> Task:
-		return Task(
-			config=self.tasks_config['research_task'],
-		)
-
-	@task
 	def reporting_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['reporting_task'],
-			output_file='outputs/report.md'
+			output_file='outputs/most_amount_of_wine.md'
 		)
 
 	@crew
